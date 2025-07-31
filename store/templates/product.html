@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-5">
+    <div class="card shadow border-0 rounded-4">
+        <div class="row g-0">
+            <!-- Product Image -->
+            <div class="col-md-5">
+                <img src="{{ product.image.url }}"
+                     class="img-fluid rounded-start w-100 h-100 object-fit-contain p-3"
+                     alt="{{ product.name }}"
+                     style="max-height: 400px; object-fit: contain;">
+            </div>
+
+            <!-- Product Details -->
+            <div class="col-md-7">
+                <div class="card-body p-4 d-flex flex-column justify-content-between h-100">
+                    <!-- Title -->
+                    <h2 class="card-title text-center fw-bold">{{ product.name }}</h2>
+
+                    <!-- Description -->
+                    <p class="card-text mt-3" style="text-align: justify; font-size: 15px;">
+                        {{ product.description }}
+                    </p>
+
+                    <!-- Pricing -->
+                    <div class="mt-4 text-center">
+                        {% if product.is_sale %}
+                            <div class="text-warning fw-semibold mb-2">
+                                <i class="bi bi-star-fill"></i> Sale! <i class="bi bi-star-fill"></i>
+                            </div>
+                            <span class="text-muted text-decoration-line-through fs-5">${{ product.price }}</span>
+                            <span class="text-success fs-4 fw-bold ms-2">${{ product.sale_price }}</span>
+                        {% else %}
+                            <span class="text-primary fs-4 fw-bold">${{ product.price }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="d-flex align-items-center justify-content-center mt-4">
+                        <label for="qty_cart" class="me-2 fw-semibold">Quantity:</label>
+                        <select class="form-select form-select-sm w-auto" id="qty_cart">
+                            {% for i in "12345" %}
+                                <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- CSRF Token -->
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <a href="{% url 'home' %}" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-house-door-fill"></i> Home
+                        </a>
+                        <button type="button" value="{{ product.id }}" class="btn btn-success px-4" id="add-cart">
+                            <i class="bi bi-cart-plus-fill"></i> Pick Me
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AJAX Script -->
+<script>
+    $(document).on('click', '#add-cart', function (e) {
+        e.preventDefault();
+
+        const productId = $(this).val();
+        const productQty = $('#qty_cart').val();
+
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'cart_add' %}",
+            data: {
+                product_id: productId,
+                product_qty: productQty,
+                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                action: 'post'
+            },
+            success: function (json) {
+                document.getElementById('cart_quantity').textContent = json.qty;
+                location.reload();
+            },
+            error: function (xhr, errmsg, err) {
+                console.log("AJAX error:", errmsg);
+                alert("Failed to add product to cart.");
+            }
+        });
+    });
+</script>
+
+{% endblock %}
